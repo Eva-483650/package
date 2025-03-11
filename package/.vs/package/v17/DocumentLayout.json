@@ -3,16 +3,16 @@
   "WorkspaceRootPath": "D:\\code\\package\\package\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{56C7BA1C-4B72-471D-B601-115741EE8BA4}|package\\package.vcxproj|D:\\code\\package\\package\\package\\package.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{56C7BA1C-4B72-471D-B601-115741EE8BA4}|package\\package.vcxproj|solutionrelative:package\\package.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{56C7BA1C-4B72-471D-B601-115741EE8BA4}|package\\package.vcxproj|D:\\code\\package\\package\\package\\package.c||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{56C7BA1C-4B72-471D-B601-115741EE8BA4}|package\\package.vcxproj|solutionrelative:package\\package.c||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{56C7BA1C-4B72-471D-B601-115741EE8BA4}|package\\package.vcxproj|D:\\code\\package\\package\\package\\package_function.c||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{56C7BA1C-4B72-471D-B601-115741EE8BA4}|package\\package.vcxproj|solutionrelative:package\\package_function.c||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{56C7BA1C-4B72-471D-B601-115741EE8BA4}|package\\package.vcxproj|D:\\code\\package\\package\\package\\package.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{56C7BA1C-4B72-471D-B601-115741EE8BA4}|package\\package.vcxproj|solutionrelative:package\\package.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     }
   ],
   "DocumentGroupContainers": [
@@ -22,17 +22,17 @@
       "DocumentGroups": [
         {
           "DockedWidth": 311,
-          "SelectedChildIndex": 4,
+          "SelectedChildIndex": 0,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 0,
               "Title": "package.c",
               "DocumentMoniker": "D:\\code\\package\\package\\package\\package.c",
               "RelativeDocumentMoniker": "package\\package.c",
               "ToolTip": "D:\\code\\package\\package\\package\\package.c",
               "RelativeToolTip": "package\\package.c",
-              "ViewState": "AgIAALQAAAAAAAAAAAAAAMkAAAARAAAAAAAAAA==",
+              "ViewState": "AgIAAHAAAAAAAAAAAAAAAKEAAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000423|",
               "WhenOpened": "2025-03-09T09:37:24.826Z",
               "IsPinned": true,
@@ -40,13 +40,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 1,
               "Title": "package_function.c",
               "DocumentMoniker": "D:\\code\\package\\package\\package\\package_function.c",
               "RelativeDocumentMoniker": "package\\package_function.c",
               "ToolTip": "D:\\code\\package\\package\\package\\package_function.c",
               "RelativeToolTip": "package\\package_function.c",
-              "ViewState": "AgIAAHECAAAAAAAAAAD4v3wCAAAEAAAAAAAAAA==",
+              "ViewState": "AgIAADIAAAAAAAAAAAAAABIDAAAMAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000423|",
               "WhenOpened": "2025-03-09T09:38:23.679Z",
               "IsPinned": true,
@@ -62,13 +62,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 2,
               "Title": "package.h",
               "DocumentMoniker": "D:\\code\\package\\package\\package\\package.h",
               "RelativeDocumentMoniker": "package\\package.h",
               "ToolTip": "D:\\code\\package\\package\\package\\package.h",
               "RelativeToolTip": "package\\package.h",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAH8AAAALAAAAAAAAAA==",
+              "ViewState": "AgIAAG8AAAAAAAAAAAAAAHIAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
               "WhenOpened": "2025-03-04T10:47:01.206Z",
               "EditorCaption": ""

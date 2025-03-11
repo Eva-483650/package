@@ -155,7 +155,7 @@ int main() {
             printf("选择错误\n");
             break;
         }
-    } while (choice != 10);
+    } while (choice != 11);
 	printf("是否保存数据？(Y/N): ");
 	char confirm = getchar();
     if (confirm == 'y' || confirm == 'Y')
@@ -197,7 +197,6 @@ void modifyBuffer()
     if (target) update_parcel(target);
     else printf("未找到该快递!\n");
 }
-
 
 void pickup(void)
 {
