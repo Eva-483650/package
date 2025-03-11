@@ -13,6 +13,7 @@ static void pickup(void);
 static void searchBuffer(void);
 static void stored();
 static void send();
+static void returnParcel();
 
 
 void menu()
@@ -26,9 +27,10 @@ void menu()
     printf("6. 取件\n");
     printf("7. 寄件\n");
     printf("8. 入库\n");
+    printf("9. 退货\n");
 
-    printf("9. 保存数据\n");
-    printf("10. 退出系统\n");
+    printf("10. 保存数据\n");
+    printf("11. 退出系统\n");
     printf("请选择操作: ");
 }
 
@@ -139,11 +141,14 @@ int main() {
         case 8: // 入库
             stored();
             break;
-        case 9:
+        case 9: //退货
+            returnParcel();
+			break;
+        case 10:
             save_to_txt(filename);
             printf("数据已保存至: %s\n", filename);
             break;
-        case 10:
+        case 11:
             printf("退出包裹界面\n");
             break;
         default:
@@ -151,7 +156,13 @@ int main() {
             break;
         }
     } while (choice != 10);
-
+	printf("是否保存数据？(Y/N): ");
+	char confirm = getchar();
+    if (confirm == 'y' || confirm == 'Y')
+    {
+        save_to_txt(filename);  // 保存为TXT格式
+        printf("数据已保存至: %s\n", filename);
+    }
     // 释放内存
     ParcelNode* current = parcel_list;
     while (current) {
@@ -159,9 +170,6 @@ int main() {
         current = current->next;
         free(temp);
     }
-
-    save_to_txt(filename);  // 保存为TXT格式
-    printf("数据已保存至: %s\n", filename);
     return 0;
 }
 
@@ -169,7 +177,7 @@ void delBuffer()
 {
     char num[20];
     printf("输入要删除的单号: ");
-    scanf("%12s", num);// 限制输入长度为12
+    scanf("%14s", num);// 限制输入长度为14
     clear_input_buffer();
     printf("确认删除快递 %s ？(y/n): ", num);
     char confirm = getchar();
@@ -183,7 +191,7 @@ void modifyBuffer()
 {
     char num[20];
     printf("输入要修改的单号: ");
-    scanf("%12s", num);
+    scanf("%14s", num);
     clear_input_buffer();
     ParcelNode* target = searchbytracking_num(parcel_list, num);
     if (target) update_parcel(target);
@@ -195,7 +203,7 @@ void pickup(void)
 {
     char num[20];
     printf("输入要取件的单号: ");
-    scanf("%12s", num);
+    scanf("%14s", num);
     clear_input_buffer();
     ParcelNode* target = searchbytracking_num(parcel_list, num);
     if (target) {
@@ -205,6 +213,7 @@ void pickup(void)
             printf("当前时间: %s\n", current_time);
             target->pickup_time = time(NULL); // 储存取件时间
             free(current_time);  // 记得释放内存
+
         }
         else {
             printf("获取时间失败\n");
@@ -212,13 +221,47 @@ void pickup(void)
         }
         // 修改状态为已取件
 		target->status = OUT;
-
+        
         // 输入取件人信息
         printf("\n请输入取件人信息\n");
         printf("\n姓名: ");
         fgets(target->collector.name, sizeof(target->collector.name), stdin);
         target->collector.name[strcspn(target->collector.name, "\n")] = '\0';
         printf("取件成功!\n");
+		// 提醒用户包裹已取出
+        printf("是否提醒用户包裹已取出？(Y/N):");
+        char choice;
+        scanf(" %c", &choice);
+        if (choice == 'Y' || choice == 'y') 
+        {
+            printf("已成功发送提醒\n");
+            target->reminder_sent = 1;
+        }
+        else 
+        {
+            printf("暂不发送提醒\n");
+            target->reminder_sent = 0;
+        }
+        // 满意度评价
+        printf("邀请用户对本次服务进行评价(Y/N): ");
+        scanf(" %c", &choice);
+        if (choice == 'Y' || choice == 'y')
+        {
+            int rating;
+            do {
+                printf("请输入1到10之间的评分: ");
+                scanf("%d", &rating);
+                if (rating < 1 || rating > 10) {
+                    printf("评分不合法，请重新输入。\n");
+                }
+            } while (rating < 1 || rating > 10);
+            target->rating = rating;
+            printf("本次服务评价为%d分\n", target->rating);
+        }
+        else
+        {
+            printf("用户暂未评价\n");
+        }
         display_parcel(target);
     }
     else printf("未找到该快递!\n");
@@ -228,7 +271,7 @@ void searchBuffer()
 {
     char num[20];
     printf("输入查询单号: ");
-    scanf("%12s", num);
+    scanf("%14s", num);
     clear_input_buffer();
     ParcelNode* result = searchbytracking_num(parcel_list, num);
     if (result) display_parcel(result);
@@ -239,7 +282,7 @@ void stored()//入库
 {
     char num[20];
     printf("输入要入库的单号: ");
-    scanf("%12s", num);
+    scanf("%14s", num);
     clear_input_buffer();
     ParcelNode* target = searchbytracking_num(parcel_list, num);
     if (target) {
@@ -257,6 +300,18 @@ void stored()//入库
         // 修改状态为已入库
 		target->status = STORED;
         printf("入库成功!\n");
+        printf("是否提醒用户取件？(Y/N)\n");
+        char choice;
+        scanf(" %c", &choice);
+        if (choice == 'Y' || choice == 'y') 
+        {
+            printf("已成功发送提醒\n");
+            target->reminder_sent = 1;
+        }
+        else {
+            printf("暂不发送提醒\n");
+            target->reminder_sent = 0;
+        }
         display_parcel(target);
         return;
     }
@@ -269,6 +324,24 @@ void send()
     insert_sorted(&parcel_list, new_node);
     new_node->status = IN_TRANSIT;
     //自动定义当下为寄件时间
-
     printf("寄件成功!\n");
+}
+
+void returnParcel()
+{
+    char num[20];
+    printf("输入要退货的单号: ");
+    scanf("%14s", num);
+    clear_input_buffer();
+    ParcelNode* target = searchbytracking_num(parcel_list, num);
+    if (target) {
+        // 修改状态为已退货
+        target->status = RETURNED;
+        printf("退货费用: %.2f\n", target->price+2);
+        printf("退货成功!\n");
+        display_parcel(target);
+    }
+    else {
+        printf("未找到该快递!\n");
+    }
 }

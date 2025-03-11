@@ -1,18 +1,18 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\Eva\\Desktop\\package\\",
+  "WorkspaceRootPath": "D:\\code\\package\\package\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{56C7BA1C-4B72-471D-B601-115741EE8BA4}|package\\package.vcxproj|C:\\Users\\Eva\\Desktop\\package\\package\\package.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "AbsoluteMoniker": "D:0:0:{56C7BA1C-4B72-471D-B601-115741EE8BA4}|package\\package.vcxproj|D:\\code\\package\\package\\package\\package.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{56C7BA1C-4B72-471D-B601-115741EE8BA4}|package\\package.vcxproj|solutionrelative:package\\package.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{56C7BA1C-4B72-471D-B601-115741EE8BA4}|package\\package.vcxproj|C:\\Users\\Eva\\Desktop\\package\\package\\package_function.c||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{56C7BA1C-4B72-471D-B601-115741EE8BA4}|package\\package.vcxproj|solutionrelative:package\\package_function.c||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+      "AbsoluteMoniker": "D:0:0:{56C7BA1C-4B72-471D-B601-115741EE8BA4}|package\\package.vcxproj|D:\\code\\package\\package\\package\\package.c||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{56C7BA1C-4B72-471D-B601-115741EE8BA4}|package\\package.vcxproj|solutionrelative:package\\package.c||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{56C7BA1C-4B72-471D-B601-115741EE8BA4}|package\\package.vcxproj|C:\\Users\\Eva\\Desktop\\package\\package\\package.c||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{56C7BA1C-4B72-471D-B601-115741EE8BA4}|package\\package.vcxproj|solutionrelative:package\\package.c||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+      "AbsoluteMoniker": "D:0:0:{56C7BA1C-4B72-471D-B601-115741EE8BA4}|package\\package.vcxproj|D:\\code\\package\\package\\package\\package_function.c||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{56C7BA1C-4B72-471D-B601-115741EE8BA4}|package\\package.vcxproj|solutionrelative:package\\package_function.c||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     }
   ],
   "DocumentGroupContainers": [
@@ -22,17 +22,17 @@
       "DocumentGroups": [
         {
           "DockedWidth": 311,
-          "SelectedChildIndex": 5,
+          "SelectedChildIndex": 4,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 1,
               "Title": "package.c",
-              "DocumentMoniker": "C:\\Users\\Eva\\Desktop\\package\\package\\package.c",
+              "DocumentMoniker": "D:\\code\\package\\package\\package\\package.c",
               "RelativeDocumentMoniker": "package\\package.c",
-              "ToolTip": "C:\\Users\\Eva\\Desktop\\package\\package\\package.c",
+              "ToolTip": "D:\\code\\package\\package\\package\\package.c",
               "RelativeToolTip": "package\\package.c",
-              "ViewState": "AgIAAFAAAAAAAAAAAAAswBEBAAABAAAAAAAAAA==",
+              "ViewState": "AgIAALQAAAAAAAAAAAAAAMkAAAARAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000423|",
               "WhenOpened": "2025-03-09T09:37:24.826Z",
               "IsPinned": true,
@@ -40,13 +40,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "package_function.c",
-              "DocumentMoniker": "C:\\Users\\Eva\\Desktop\\package\\package\\package_function.c",
+              "DocumentMoniker": "D:\\code\\package\\package\\package\\package_function.c",
               "RelativeDocumentMoniker": "package\\package_function.c",
-              "ToolTip": "C:\\Users\\Eva\\Desktop\\package\\package\\package_function.c",
+              "ToolTip": "D:\\code\\package\\package\\package\\package_function.c",
               "RelativeToolTip": "package\\package_function.c",
-              "ViewState": "AgIAANUCAAAAAAAAAAAuwD8DAAABAAAAAAAAAA==",
+              "ViewState": "AgIAAHECAAAAAAAAAAD4v3wCAAAEAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000423|",
               "WhenOpened": "2025-03-09T09:38:23.679Z",
               "IsPinned": true,
@@ -61,18 +61,14 @@
               "Name": "ST:0:0:{34e76e81-ee4a-11d0-ae2e-00a0c90fffc3}"
             },
             {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
-            },
-            {
               "$type": "Document",
               "DocumentIndex": 0,
               "Title": "package.h",
-              "DocumentMoniker": "C:\\Users\\Eva\\Desktop\\package\\package\\package.h",
+              "DocumentMoniker": "D:\\code\\package\\package\\package\\package.h",
               "RelativeDocumentMoniker": "package\\package.h",
-              "ToolTip": "C:\\Users\\Eva\\Desktop\\package\\package\\package.h",
+              "ToolTip": "D:\\code\\package\\package\\package\\package.h",
               "RelativeToolTip": "package\\package.h",
-              "ViewState": "AgIAAGUAAAAAAAAAAAAuwGoAAAAgAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAH8AAAALAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
               "WhenOpened": "2025-03-04T10:47:01.206Z",
               "EditorCaption": ""
@@ -90,10 +86,6 @@
             {
               "$type": "Bookmark",
               "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{1c64b9c2-e352-428e-a56d-0ace190b99a6}"
             }
           ]
         }

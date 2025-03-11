@@ -57,7 +57,7 @@ void initialize_missing_data(ParcelNode* node)
 	strcpy(node->collector.name, "未知");
 	strcpy(node->pickup_code, "00000");
 	strcpy(node->shelf_id, "未知");
-	node->rating = 0;
+	node->rating = -1;
 	node->reminder_sent = 0;
 	node->price = 0.0f;
 	node->weight = 0.0f;
@@ -106,8 +106,7 @@ ParcelNode* create_parcel_without_state()
             valid = 1;
         }
     }
-    //取件码生成
-    generate_pickup_code(new_node->pickup_code);
+    
     // 重量输入验证
     valid = 0;
     while (!valid) {
@@ -149,6 +148,7 @@ ParcelNode* create_parcel_without_state()
 
     //计算价格
     // 查询规则并计算价格
+    printf("=== 计算价格 ===\n");
     PriceRule* rule = find_rule_by_name(new_node->company);
     if (!rule)
     {
@@ -162,6 +162,7 @@ ParcelNode* create_parcel_without_state()
     }
     else {
         printf("运费为: %.2f\n", price);
+        new_node->price = price;
     }
     return new_node;
 }
@@ -182,11 +183,13 @@ void setBufferState(ParcelNode* new_node)
     char* current_time = get_time();
     switch (state) {
     case 0:
-        // 自动定义当下为取件时间
+        //自动定义当下为入库时间
+        //取件码生成
+        generate_pickup_code(new_node->pickup_code);
         if (current_time != NULL) {
             printf("当前时间: %s\n", current_time);
-            new_node->store_time = time(NULL); // 储存取件时间
-            free(current_time);  // 记得释放内存
+            new_node->store_time = time(NULL);
+            free(current_time);
         }
         else {
             printf("获取时间失败\n");
@@ -216,13 +219,44 @@ void setBufferState(ParcelNode* new_node)
         // 修改状态为已取件
         new_node->status = OUT;
         printf("已标记为出库\n");
+        printf("是否提醒用户包裹已取出？(Y/N):");
+        char choice;
+        scanf(" %c", &choice);
+        if (choice == 'Y' || choice == 'y') {
+            printf("已成功发送提醒\n");
+            new_node->reminder_sent = 1;
+        }
+        else {
+            printf("暂不发送提醒\n");
+            new_node->reminder_sent = 0;
+        }
+        // 满意度评价
+        printf("邀请用户对本次服务进行评价(Y/N): ");
+        scanf(" %c", &choice);
+        if (choice == 'Y' || choice == 'y')
+        {
+            int rating;
+            do {
+                printf("请输入1到10之间的评分: ");
+                scanf("%d", &rating);
+                if (rating < 1 || rating > 10) {
+                    printf("评分不合法，请重新输入。\n");
+                }
+            } while (rating < 1 || rating > 10);
+            new_node->rating = rating;
+            printf("本次服务评价为%d分\n", new_node->rating);
+        }
+        else
+        {
+            printf("用户暂未评价\n");
+        }
         display_parcel(new_node);
         break;
     case 2:
         new_node->status = DELAY;
         printf("已标记滞留状态\n");
         printf("是否提醒用户取件？(Y/N)\n");
-        char choice;
+        choice = 0;
         scanf(" %c", &choice);
         if (choice == 'Y' || choice == 'y') {
             printf("已成功发送提醒\n");
@@ -343,17 +377,21 @@ void delete_parcel(ParcelNode** head, char* tracking_num) {
 }
 
 //查找（单号）
-ParcelNode* searchbytracking_num(ParcelNode* head, char* tracking_num) {
-    ASSERT_NOT_NULL(head);
+ParcelNode* searchbytracking_num(ParcelNode* head, char* tracking_num) 
+{
+    if (head == NULL) return NULL; // 处理空链表
     ParcelNode* current = head;
-    while (current != NULL) {
-        int cmp = strcmp(current->tracking_num, tracking_num);
-        if (cmp == 0) return current;
-        if (cmp > 0) break;  // 提前终止
-        current = current->next;
+    while (current != NULL) 
+    {
+        if (strcmp(current->tracking_num, tracking_num) == 0) 
+        {
+            return current;
+        }
+        current = current->next; // 完整遍历链表
     }
     return NULL;
 }
+
 
 //更新包裹信息
 void update_parcel(ParcelNode* node) {
@@ -365,12 +403,17 @@ void update_parcel(ParcelNode* node) {
     display_parcel(node);
     // 修改快递单号
     printf("\n是否重新生成快递单号? (Y/N): ");
-    generate_tracking_num(node->tracking_num, sizeof(node->tracking_num));
-    printf("\n生成快递单号: %s\n", node->tracking_num);
+    fgets(buffer, sizeof(buffer), stdin);
+    if (buffer[0] == 'Y' || buffer[0] == 'y')
+    {
+        generate_tracking_num(node->tracking_num, sizeof(node->tracking_num));
+        printf("\n生成快递单号: %s\n", node->tracking_num);
+    }
     // 修改物流公司
     printf("\n是否修改物流公司? (Y/N): ");
     fgets(buffer, sizeof(buffer), stdin);
-    if (buffer[0] == 'Y' || buffer[0] == 'y') {
+    if (buffer[0] == 'Y' || buffer[0] == 'y') 
+    {
         printf("新物流公司: ");
         fgets(node->company, sizeof(node->company), stdin);
         node->company[strcspn(node->company, "\n")] = '\0';
@@ -378,7 +421,8 @@ void update_parcel(ParcelNode* node) {
     // 修改包裹类型
     printf("\n是否修改包裹类型? (Y/N): ");
     fgets(buffer, sizeof(buffer), stdin);
-    if (buffer[0] == 'Y' || buffer[0] == 'y') {
+    if (buffer[0] == 'Y' || buffer[0] == 'y') 
+    {
         valid = 0;
         while (!valid) {
             printf("新包裹类型 (0-普通 1-易碎 2-生鲜 3-贵重 4-危险): ");
@@ -394,7 +438,8 @@ void update_parcel(ParcelNode* node) {
     // 修改包裹尺寸
     printf("\n是否修改包裹尺寸? (Y/N): ");
     fgets(buffer, sizeof(buffer), stdin);
-    if (buffer[0] == 'Y' || buffer[0] == 'y') {
+    if (buffer[0] == 'Y' || buffer[0] == 'y') 
+    {
         valid = 0;
         while (!valid) {
             printf("新包裹尺寸 (0-小 1-中 2-大): ");
@@ -410,7 +455,8 @@ void update_parcel(ParcelNode* node) {
     // 修改重量
     printf("\n是否修改重量? (Y/N): ");
     fgets(buffer, sizeof(buffer), stdin);
-    if (buffer[0] == 'Y' || buffer[0] == 'y') {
+    if (buffer[0] == 'Y' || buffer[0] == 'y') 
+    {
         valid = 0;
         while (!valid) {
             printf("新重量(kg): ");
@@ -433,7 +479,8 @@ void update_parcel(ParcelNode* node) {
     scanf("%d", &zone_choice);
     clear_input_buffer();
     // 确保用户输入有效
-    if (zone_choice < 0 || zone_choice > 3) {
+    if (zone_choice < 0 || zone_choice > 3) 
+    {
         printf("输入错误，默认使用偏远地区 (ZONE_4)!\n");
         zone_choice = 3;
     }
@@ -454,9 +501,23 @@ void update_parcel(ParcelNode* node) {
     }
 
     //计算价格
-    node->price = calculate_price(node, &rule, zone_choice);
-    printf("\n=== 计算结果 ===\n");
-    printf("最终运费: %.2f 元\n", node->price);
+    // 查询规则并计算价格
+    printf("=== 计算价格 ===\n");
+    PriceRule* rule = find_rule_by_name(node->company);
+    if (!rule)
+    {
+        printf("未找到%s的规则！\n", node->company);
+        return NULL;
+    }
+
+    float price = calculate_price(node, rule, zone_choice);
+    if (price < 0.0f) {
+        printf("计算价格失败，请检查输入！\n");
+    }
+    else {
+        printf("运费为: %.2f\n", price);
+        node->price = price;
+    }
 
     // 修改收件人信息
     printf("\n是否修改收件人信息? (Y/N): ");
@@ -581,6 +642,7 @@ const char* get_package_status_str(PackageStatus status) {
     case DAMAGED: return "损坏";
     case IN_TRANSIT: return "运输中";
     case NONESTATUS: return "未知状态";
+	case RETURNED: return "已退货";
     default: return "无效状态";
     }
 }
