@@ -80,7 +80,14 @@ typedef struct {
     float zone_rate[4];      // **按地区收费：省内、邻省、远程、偏远地区**
 } PriceRule;
 
-
+//查询过滤器
+typedef struct
+{
+    int target_status;          // 按状态筛选（-1表示不过滤）
+    char sender_keyword[50];    // 寄件人关键词
+    char receiver_keyword[50];  // 收件人关键词
+    char collector_keyword[50]; // 取件人关键词
+} ParcelFilter;
 
 //-----------------------------------------------------------
 // 函数声明
@@ -109,6 +116,9 @@ void initialize_missing_data(ParcelNode* node);
 const char* get_package_size_str(PackageSize size);
 const char* get_package_type_str(PackageType type);
 const char* get_package_status_str(PackageStatus status);
+char* strcasestr(const char* haystack, const char* needle);
+void batch_search_by_numbers(ParcelNode* head, const char* input);
+ParcelNode** search_parcels(ParcelNode* head, ParcelFilter filter, int* count);
 
 
 extern ParcelNode* parcel_list;  // 声明全局链表!!

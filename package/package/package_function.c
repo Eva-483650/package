@@ -384,14 +384,93 @@ ParcelNode* searchbytracking_num(ParcelNode* head, char* tracking_num)
     while (current != NULL) 
     {
         if (strcmp(current->tracking_num, tracking_num) == 0) 
-        {
             return current;
-        }
         current = current->next; // 完整遍历链表
     }
     return NULL;
 }
 
+//批量查询单号（逗号分隔）
+void batch_search_by_numbers(ParcelNode* head, const char* input) {
+    char buffer[200]; // 假设最多支持200字符输入
+    strncpy(buffer, input, sizeof(buffer) - 1);
+    buffer[sizeof(buffer) - 1] = '\0';
+    printf("\n=== 批量查询结果 ===\n");
+    char* token = strtok(buffer, ","); // 分割逗号
+    int total = 0, found = 0;
+    while (token != NULL) {
+        total++;
+        // 清理单号两端的空白字符
+        char* num = token;
+        while (isspace(*num)) num++;
+        size_t len = strlen(num);
+        while (len > 0 && isspace(num[len - 1])) num[--len] = '\0';
+        if (strlen(num) == 0) {
+            token = strtok(NULL, ",");
+            continue;
+        }
+        ParcelNode* result = searchbytracking_num(head, num);
+        if (result != NULL) {
+            found++;
+            display_parcel(result);
+        }
+        else {
+            printf("\n单号[%s]未找到", num);
+        }
+        token = strtok(NULL, ",");
+    }
+    printf("\n总计查询%d个单号，成功匹配%d个\n", total, found);
+}
+
+//不区分大小写的字符串查找（无strcasestr）
+char* strcasestr(const char* haystack, const char* needle)
+{
+    if (!*needle) return (char*)haystack;
+    for (; *haystack; haystack++) {
+        const char* h = haystack;
+        const char* n = needle;
+        while (tolower(*h) == tolower(*n) && *n) { h++; n++; }
+        if (!*n) return (char*)haystack;
+    }
+    return NULL;
+}
+
+ParcelNode** search_parcels(ParcelNode* head, ParcelFilter filter, int* count) {
+    ParcelNode** results = malloc(100 * sizeof(ParcelNode*)); // 假设最多100条结果
+    *count = 0;
+
+    ParcelNode* current = head;
+    while (current != NULL && *count < 100) {
+        // 状态过滤
+        if (filter.target_status != -1 && current->status != filter.target_status) {
+            current = current->next;
+            continue;
+        }
+
+        // 姓名关键词过滤（支持空关键词）
+        if (strlen(filter.sender_keyword) > 0 &&
+            !strcasestr(current->sender.name, filter.sender_keyword)) {
+            current = current->next;
+            continue;
+        }
+        if (strlen(filter.receiver_keyword) > 0 &&
+            !strcasestr(current->receiver.name, filter.receiver_keyword)) {
+            current = current->next;
+            continue;
+        }
+        if (strlen(filter.collector_keyword) > 0 &&
+            !strcasestr(current->collector.name, filter.collector_keyword)) {
+            current = current->next;
+            continue;
+        }
+
+        // 记录匹配结果
+        results[*count] = current;
+        (*count)++;
+        current = current->next;
+    }
+    return results;
+}
 
 //更新包裹信息
 void update_parcel(ParcelNode* node) {
@@ -507,7 +586,7 @@ void update_parcel(ParcelNode* node) {
     if (!rule)
     {
         printf("未找到%s的规则！\n", node->company);
-        return NULL;
+        return;
     }
 
     float price = calculate_price(node, rule, zone_choice);

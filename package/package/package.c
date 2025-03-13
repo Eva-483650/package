@@ -10,11 +10,10 @@ int price_count = 0;
 static void delBuffer(void);
 static void modifyBuffer(void);
 static void pickup(void);
-static void searchBuffer(void);
 static void stored();
 static void send();
 static void returnParcel();
-
+static void search_menu(ParcelNode* head);
 
 void menu()
 {
@@ -123,7 +122,11 @@ int main() {
             modifyBuffer();
             break;
         case 4:
-            searchBuffer();
+            ParcelNode * current_parcel = parcel_list;
+            if (current_parcel)
+                search_menu(current_parcel);
+            else
+				printf("无快递信息\n");
             break;
         case 5:
             printf("\n=== 所有快递信息 ===\n");
@@ -266,15 +269,93 @@ void pickup(void)
     else printf("未找到该快递!\n");
 }
 
-void searchBuffer()
+void search_menu(ParcelNode* head) 
 {
-    char num[20];
-    printf("输入查询单号: ");
-    scanf("%14s", num);
-    clear_input_buffer();
-    ParcelNode* result = searchbytracking_num(parcel_list, num);
-    if (result) display_parcel(result);
-    else printf("未找到该快递!\n");
+    ParcelFilter filter = { -1, "", "", "" };
+    int choice = -1;
+    do {
+        printf("\n=== 快递查询菜单 ===");
+        printf("\n1. 按单号查询");
+        printf("\n2. 批量单号查询");
+        printf("\n3. 设置状态筛选");
+        printf("\n4. 设置寄件人关键词");
+        printf("\n5. 设置收件人关键词");
+        printf("\n6. 设置取件人关键词");
+        printf("\n7. 执行组合查询");
+        printf("\n0. 返回主菜单");
+        printf("\n请输入选项: ");
+        if (scanf("%d", &choice) != 1) {
+            // 输入非数字时清理缓冲区
+            clear_input_buffer();
+            choice = -1; // 重置为无效选项
+            continue;
+        }
+        clear_input_buffer();
+        switch (choice) {
+        case 1: {
+            char num[20];
+            printf("请输入快递单号: ");
+            fgets(num, sizeof(num), stdin);
+            num[strcspn(num, "\n")] = '\0';
+            ParcelNode* result = searchbytracking_num(head, num);
+            if (result != NULL)
+                display_parcel(result);
+            else
+                printf("未找到单号为 %s 的快递！\n", num);
+            break;
+        }
+        case 2: { // 新增批量查询
+            char input[200];
+            printf("请输入多个单号（用逗号分隔）: ");
+            fgets(input, sizeof(input), stdin);
+            input[strcspn(input, "\n")] = '\0'; // 去换行符
+            batch_search_by_numbers(head, input);
+            break;
+        }
+        case 3: {
+            printf("\n可选状态:STORED(0), OUT(1), DELAY(2), LOST(3), STOLEN(4), REJECTED(5), DAMAGED(6)，IN_TRANSIT(7)");
+            printf("\n输入状态编号 (-1取消): ");
+            int status;
+            scanf("%d", &status);
+            getchar();
+            filter.target_status = (status >= 0 && status <= 7) ? status : -1;
+            break;
+        }
+        case 4: {
+            printf("输入寄件人关键词: ");
+            fgets(filter.sender_keyword, 50, stdin);
+            filter.sender_keyword[strcspn(filter.sender_keyword, "\n")] = '\0';
+            break;
+        }
+        case 5: {
+            printf("输入收件人关键词: ");
+            fgets(filter.receiver_keyword, 50, stdin);
+            filter.receiver_keyword[strcspn(filter.receiver_keyword, "\n")] = '\0';
+            break;
+        }
+        case 6: {
+            printf("输入取件人关键词: ");
+            fgets(filter.collector_keyword, 50, stdin);
+            filter.collector_keyword[strcspn(filter.collector_keyword, "\n")] = '\0';
+            break;
+        }
+        case 7: {
+            int count;
+            ParcelNode** results = search_parcels(head, filter, &count);
+            if (count == 0) {
+                printf("\n未找到匹配的快递！");
+            }
+            else {
+                printf("\n=== 找到 %d 个匹配快递 ===", count);
+                for (int i = 0; i < count; i++) {
+                    display_parcel(results[i]);
+                }
+            }
+            free(results);
+            break;
+        }
+        }
+    } while (choice != 0);
 }
 
 void stored()//入库
