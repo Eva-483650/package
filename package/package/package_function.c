@@ -442,7 +442,8 @@ ParcelNode** search_parcels(ParcelNode* head, ParcelFilter filter, int* count) {
     ParcelNode* current = head;
     while (current != NULL && *count < 100) {
         // 状态过滤
-        if (filter.target_status != -1 && current->status != filter.target_status) {
+        if (filter.target_status != -1 && current->status != filter.target_status) 
+        {
             current = current->next;
             continue;
         }

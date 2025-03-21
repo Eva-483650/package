@@ -141,6 +141,7 @@ int main() {
             break;
         case 7:// 寄件
             send();
+            break;
         case 8: // 入库
             stored();
             break;
@@ -380,6 +381,7 @@ void stored()//入库
         // 修改状态为已入库
 		target->status = STORED;
         printf("入库成功!\n");
+
         printf("是否提醒用户取件？(Y/N)\n");
         char choice;
         scanf(" %c", &choice);
@@ -393,7 +395,6 @@ void stored()//入库
             target->reminder_sent = 0;
         }
         display_parcel(target);
-        return;
     }
     else printf("未找到该快递!\n");
 }
@@ -402,9 +403,25 @@ void send()
 {
     ParcelNode* new_node = create_parcel_without_state();//无收件人信息，无取件人信息，无状态
     insert_sorted(&parcel_list, new_node);
-    new_node->status = IN_TRANSIT;
     //自动定义当下为寄件时间
-    printf("寄件成功!\n");
+    if (new_node) {
+        //自动定义当下为入库时间
+        char* current_time = get_time();
+        if (current_time != NULL) {
+            printf("当前时间: %s\n", current_time);
+            new_node->send_time= time(NULL); // 储存取件时间
+            free(current_time);  // 记得释放内存
+        }
+        else {
+            printf("获取时间失败\n");
+            return;
+        }
+        // 修改状态为在途
+        new_node->status = IN_TRANSIT;
+        printf("寄件成功!\n");
+        display_parcel(new_node);
+    }
+    else printf("未找到该快递!\n");
 }
 
 void returnParcel()
