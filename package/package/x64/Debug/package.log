@@ -1,6 +1,5 @@
-﻿  package.c
-  package_function.c
-  正在生成代码...
+﻿  api.cpp
+D:\code\package\package\package\api.cpp(103,13): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
   package.vcxproj -> D:\code\package\package\x64\Debug\package.exe
   'pwsh.exe' 不是内部或外部命令，也不是可运行的程序
   或批处理文件。

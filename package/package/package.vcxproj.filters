@@ -15,10 +15,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="package.c">
+    <ClCompile Include="package.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="package_function.c">
+    <ClCompile Include="package_function.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="api.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
