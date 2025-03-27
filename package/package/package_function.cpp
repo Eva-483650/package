@@ -55,6 +55,10 @@ void initialize_missing_data(ParcelNode* node)
 	strcpy(node->collector.name, "未知");
 	strcpy(node->pickup_code, "00000");
 	strcpy(node->shelf_id, "未知");
+    strcpy(node->promo_code, "无优惠券");
+	strcpy(node->address, "未知");
+	strcpy(node->send_address, "未知");
+
 	node->rating = -1;
 	node->reminder_sent = 0;
 	node->price = 0.0f;
@@ -123,8 +127,7 @@ ParcelNode* create_parcel_without_state()
     scanf("%d", (int*)&new_node->sender.accountType);
     clear_input_buffer();
     strcpy(new_node->send_address, "吉大大学城快递驿站（博文路与学海街交叉口西南120米）");
-	printf("寄件地址: %s\n", new_node->send_address);
-
+    printf("寄件地址: %s\n", new_node->send_address);
     // 输入收件人信息
     printf("\n=== 收件人信息 ===");
     printf("\n姓名: ");
@@ -147,7 +150,7 @@ ParcelNode* create_parcel_without_state()
     }
     // 输入地址
 	printf("\n=== 收件地址 ===\n");
-    my_position(new_node);
+    my_position(new_node,0);
 
     //计算价格
     // 查询规则并计算价格
@@ -158,7 +161,20 @@ ParcelNode* create_parcel_without_state()
         printf("未找到%s的规则！\n", new_node->company);
         return NULL;
     }
+    printf("请输入优惠码（若无则直接回车）: ");
+    char promo_code[20];
 
+    // 使用fgets获取完整输入行
+    fgets(promo_code, sizeof(promo_code), stdin);
+    // 去除换行符
+    size_t len = strcspn(promo_code, "\n");
+    promo_code[len] = '\0';
+    // 判断逻辑
+    if (strlen(promo_code) == 0)
+    {
+        strcpy(new_node->promo_code, "无优惠券");
+    }
+    //（新增）
     float price = calculate_price(new_node, rule, zone_choice);
     if (price < 0.0f) {
         printf("计算价格失败，请检查输入！\n");
@@ -175,9 +191,9 @@ void setBufferState(ParcelNode* new_node)
     printf("\n=== 包裹状态 ===\n");
     int state = -1;
     while (1) {
-        printf("请选择包裹当前状态: STORED(0), OUTBOUND(1), DELAY(2), LOST(3), STOLEN(4), REJECTED(5), DAMAGED(6)，IN_TRANSIT(7)\n");
+        printf("请选择包裹当前状态: STORED(0), OUTBOUND(1), DELAY(2), LOST(3), STOLEN(4), REJECTED(5), DAMAGED(6),IN_TRANSIT(7)\n");
         scanf("%d", &state);
-        if (state >= 0 && state <= 7) {
+        if (state >= 0 && state <= 8) {
             break;
         }
         printf("输入错误,请重新输入\n");
@@ -328,11 +344,130 @@ void setBufferState(ParcelNode* new_node)
         }
         printf("已标记运输中状态\n");
         break;
+	case 8:
+		new_node->status = WAITING_PICKUP;
     default:
         break;
     }
 }
+ParcelNode* create_parcel_without_send_address()
+{
+    ParcelNode* new_node = (ParcelNode*)malloc(sizeof(ParcelNode));
+    memset(new_node, 0, sizeof(ParcelNode));
+    char buffer[100];
+    printf("\n=== 新建快递 ===\n");
+    initialize_missing_data(new_node);
+    // 单号生成
+    generate_tracking_num(new_node->tracking_num, sizeof(new_node->tracking_num));
+    printf("生成快递单号: %s\n", new_node->tracking_num);
+    // 公司名称输入
+    printf("物流公司: ");
+    fgets(new_node->company, sizeof(new_node->company), stdin);
+    new_node->company[strcspn(new_node->company, "\n")] = '\0';
+    int valid = 0;
+    // 类型输入验证
+    valid = 0;
+    while (!valid) {
+        printf("包裹类型 (0-普通 1-易碎 2-生鲜 3-贵重 4-危险): ");
+        fgets(buffer, sizeof(buffer), stdin);
+        int input = atoi(buffer);
+        if (input >= 0 && input <= 4) {
+            new_node->type = (PackageType)input;
+            valid = 1;
+        }
+    }
+    // 尺寸输入验证
+    valid = 0;
+    while (!valid) {
+        printf("包裹尺寸 (0-小 1-中 2-大): ");
+        fgets(buffer, sizeof(buffer), stdin);
+        int input = atoi(buffer);
+        if (input >= 0 && input <= 2) {
+            new_node->size = (PackageSize)input;
+            valid = 1;
+        }
+    }
 
+    // 重量输入验证
+    valid = 0;
+    while (!valid) {
+        printf("重量(kg): ");
+        fgets(buffer, sizeof(buffer), stdin);
+        if (sscanf(buffer, "%f", &new_node->weight) == 1 && new_node->weight > 0) {
+            valid = 1;
+        }
+    }
+    // 输入寄件人信息
+    printf("\n=== 寄件人信息 ===");
+    printf("\n姓名: ");
+    fgets(new_node->sender.name, sizeof(new_node->sender.name), stdin);
+    new_node->sender.name[strcspn(new_node->sender.name, "\n")] = '\0';
+    printf("请选择寄件人账号类型(0-学生 1-VIP 2-普通 3-教职工 4-企业):");
+    scanf("%d", (int*)&new_node->sender.accountType);
+    clear_input_buffer();
+    // 输入地址
+    printf("\n=== 上门取件地址 ===\n");
+    my_position(new_node,1);
+	new_node->status = WAITING_PICKUP;
+
+    // 输入收件人信息
+    printf("\n=== 收件人信息 ===");
+    printf("\n姓名: ");
+    fgets(new_node->receiver.name, sizeof(new_node->receiver.name), stdin);
+    new_node->receiver.name[strcspn(new_node->receiver.name, "\n")] = '\0';
+
+    int zone_choice;
+    printf("\n=== 选择寄送区域 ===\n");
+    printf("0: 省内 (ZONE_1)\n");
+    printf("1: 邻省 (ZONE_2)\n");
+    printf("2: 远程 (ZONE_3)\n");
+    printf("3: 偏远地区 (ZONE_4)\n");
+    printf("请输入区域编号: ");
+    scanf("%d", &zone_choice);
+    clear_input_buffer();
+    // 确保用户输入有效
+    if (zone_choice < 0 || zone_choice > 3) {
+        printf("输入错误，默认使用偏远地区 (ZONE_4)!\n");
+        zone_choice = 3;
+    }
+    // 输入地址
+    printf("\n=== 收件地址 ===\n");
+    my_position(new_node,0);
+
+    //计算价格
+    // 查询规则并计算价格
+    printf("=== 计算价格 ===\n");
+    PriceRule* rule = find_rule_by_name(new_node->company);
+    if (!rule)
+    {
+        printf("未找到%s的规则！\n", new_node->company);
+        return NULL;
+    }
+	printf("请输入优惠码（若无则直接回车）: ");
+	char promo_code[20];
+    // 使用fgets获取完整输入行
+    fgets(promo_code, sizeof(promo_code), stdin);
+    // 去除换行符
+    size_t len = strcspn(promo_code, "\n");
+    promo_code[len] = '\0';
+    // 判断逻辑
+    if (strlen(promo_code) == 0)
+    {
+        strcpy(new_node->promo_code, "无优惠券");
+    }
+    //（新增）
+    float price = calculate_price(new_node, rule, zone_choice);
+    if (price < 0.0f) {
+        printf("计算价格失败，请检查输入！\n");
+    }
+    else {
+        printf("运费为: %.2f\n", price);
+        new_node->price = price;
+    }
+	new_node->status = WAITING_PICKUP;
+	printf("已标记等待上门取件状态\n");
+    return new_node;
+}
 //插入包裹到链表
 void insert_sorted(ParcelNode** head, ParcelNode* new_node) {
 	if (!head || !new_node) return;
@@ -351,7 +486,6 @@ void insert_sorted(ParcelNode** head, ParcelNode* new_node) {
     new_node->next = current->next;
     current->next = new_node;
 }
-
 
 //删除包裹节点
 void delete_parcel(ParcelNode** head, char* tracking_num) {
@@ -478,7 +612,8 @@ ParcelNode** search_parcels(ParcelNode* head, ParcelFilter filter, int* count) {
 }
 
 //更新包裹信息
-void update_parcel(ParcelNode* node) {
+void update_parcel(ParcelNode* node) 
+{
 	if (node == NULL) return;
     char buffer[100];
     int valid = 0;
@@ -552,6 +687,28 @@ void update_parcel(ParcelNode* node) {
         }
     }
 
+    // 修改寄件人信息
+    printf("\n是否修改寄件人信息? (Y/N): ");
+    fgets(buffer, sizeof(buffer), stdin);
+    if (buffer[0] == 'Y' || buffer[0] == 'y') {
+        printf("\n新寄件人姓名: ");
+        fgets(node->sender.name, sizeof(node->sender.name), stdin);
+        node->sender.name[strcspn(node->sender.name, "\n")] = '\0';
+        printf("请选择寄件人账号类型(0-学生 1-VIP 2-普通 3-教职工 4-企业):");
+        clear_input_buffer();
+        int accountType;
+        scanf("%d", &accountType);
+        node->sender.accountType = (AccountType)accountType;
+        clear_input_buffer();
+    }
+
+	printf("\n是否修改寄件地址（仅限上门取件服务）? (Y/N): ");
+	fgets(buffer, sizeof(buffer), stdin);
+	if (buffer[0] == 'Y' || buffer[0] == 'y')
+	{
+		my_position(node,1);
+	}
+
     //修改区域
     int zone_choice;
     printf("\n=== 选择寄送区域 ===\n");
@@ -569,30 +726,15 @@ void update_parcel(ParcelNode* node) {
         zone_choice = 3;
     }
 
-	//修改地址
-	printf("是否修改地址? (Y/N): ");
+	// 修改地址
+	printf("是否修改收件地址? (Y/N): ");
 	fgets(buffer, sizeof(buffer), stdin);
 	if (buffer[0] == 'Y' || buffer[0] == 'y')
 	{
-        my_position(node);
+        my_position(node,0);
 	}
-
-    // 修改寄件人信息
-    printf("\n是否修改寄件人信息? (Y/N): ");
-    fgets(buffer, sizeof(buffer), stdin);
-    if (buffer[0] == 'Y' || buffer[0] == 'y') {
-        printf("\n新寄件人姓名: ");
-        fgets(node->sender.name, sizeof(node->sender.name), stdin);
-        node->sender.name[strcspn(node->sender.name, "\n")] = '\0';
-        printf("请选择寄件人账号类型(0-学生 1-VIP 2-普通 3-教职工 4-企业):");
-        clear_input_buffer();
-        int accountType;
-        scanf("%d", &accountType);
-        node->sender.accountType = (AccountType)accountType;
-        clear_input_buffer();
-    }
-
-    //计算价格
+   
+    // 计算价格
     // 查询规则并计算价格
     printf("=== 计算价格 ===\n");
     PriceRule* rule = find_rule_by_name(node->company);
@@ -681,10 +823,29 @@ void update_parcel(ParcelNode* node) {
             }
         }
     }
+	// 修改状态
+	printf("\n是否修改状态? (Y/N): ");
+	fgets(buffer, sizeof(buffer), stdin);
+    if (buffer[0] == 'Y' || buffer[0] == 'y')
+    {
+        //设定包裹状态
+        printf("\n=== 包裹状态 ===\n");
+        int state = -1;
+        while (1) {
+            printf("请选择包裹当前状态: STORED(0), OUTBOUND(1), DELAY(2), LOST(3), STOLEN(4), REJECTED(5), DAMAGED(6),IN_TRANSIT(7)\n");
+            scanf("%d", &state);
+            if (state >= 0 && state <= 8) 
+            {
+                break;
+            }
+            printf("输入错误,请重新输入\n");
+        }
+    }
     // 修改满意度评价
     printf("\n是否修改满意度评价? (Y/N): ");
     fgets(buffer, sizeof(buffer), stdin);
-    if (buffer[0] == 'Y' || buffer[0] == 'y') {
+    if (buffer[0] == 'Y' || buffer[0] == 'y') 
+    {
         valid = 0;
         while (!valid) {
             printf("新满意度评价 (0-10): ");
@@ -735,6 +896,7 @@ const char* get_package_status_str(PackageStatus status) {
     case IN_TRANSIT: return "运输中";
     case NONESTATUS: return "未知状态";
 	case RETURNED: return "已退货";
+	case WAITING_PICKUP: return "等待上门取件";
     default: return "无效状态";
     }
 }
@@ -747,6 +909,7 @@ void display_parcel(ParcelNode* node) {
 		printf("无效的包裹信息\n");
         return;
     }
+    auto_update_status(node);
     char send_time_str[20], store_time_str[20], pickup_time_str[20];
     time_to_str(node->send_time, send_time_str, sizeof(send_time_str));
     time_to_str(node->store_time, store_time_str, sizeof(store_time_str));
@@ -771,6 +934,12 @@ void display_parcel(ParcelNode* node) {
     printf("\n当前状态: %s", get_package_status_str(node->status));
     printf("\n满意度评价: %d", node->rating);
     printf("\n是否提醒: %d", node->reminder_sent);
+	if (node->status == DELAY)
+	{
+        printf("\033[31m滞留包裹\033[0m"); // 红色高亮
+        printf(" (滞留时长：%.1f小时)",
+            (double)(time(NULL) - node->store_time) / 3600);
+	}
     printf("\n=================\n");
 }
 
@@ -794,14 +963,14 @@ void save_to_txt(const char* filename)
         return;
     }
     // 写入表头
-    fprintf(fp, "快递单号,物流公司,包裹类型,包裹尺寸,重量,价格,寄件人,收件人,取件人,取件码,货架编号,寄件地址，收件地址,寄件时间,入库时间,出库时间,当前状态,满意度评价,是否提醒\n");
+    fprintf(fp, "快递单号, 物流公司, 包裹类型, 包裹尺寸, 重量, 价格, 寄件人, 收件人, 取件人, 取件码, 货架编号, 寄件地址, 收件地址, 寄件时间, 入库时间, 出库时间, 当前状态, 满意度评价, 是否提醒, 优惠券\n");
     ParcelNode* current = parcel_list;
     while (current) {
         char send_time_str[20], store_time_str[20], pickup_time_str[20];
         time_to_str(current->send_time, send_time_str, sizeof(send_time_str));
         time_to_str(current->store_time, store_time_str, sizeof(store_time_str));
         time_to_str(current->pickup_time, pickup_time_str, sizeof(pickup_time_str));
-        fprintf(fp, "%s,%s,%d,%d,%.2f,%.2f,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%d,%d,%d\n",
+        fprintf(fp, "%s,%s,%d,%d,%.2f,%.2f,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%d,%d,%d,%s",
             current->tracking_num,
             current->company,
             current->type,
@@ -820,8 +989,13 @@ void save_to_txt(const char* filename)
             pickup_time_str,
             current->status,
             current->rating,
-            current->reminder_sent
+            current->reminder_sent,
+            current->promo_code
         );
+        if(current->next==NULL)
+		{
+			fprintf(fp, "\n");
+		}
         current = current->next;
     }
     fclose(fp);
@@ -850,7 +1024,7 @@ void load_from_txt(const char* filename)
         memset(new_node, 0, sizeof(ParcelNode));
         char send_time_str[20], store_time_str[20], pickup_time_str[20];
         // 解析每一行数据 赋值给time的时候需要转换
-        int parsed = sscanf(line, "%19[^,],%49[^,],%d,%d,%f,%f,%49[^,],%49[^,],%49[^,],%5[^,],%9[^,],%4095[^,],%4095[^,],%19[^,],%19[^,],%19[^,],%d,%d,%d",
+        int parsed = sscanf(line, "%19[^,],%49[^,],%d,%d,%f,%f,%49[^,],%49[^,],%49[^,],%5[^,],%9[^,],%4095[^,],%4095[^,],%19[^,],%19[^,],%19[^,],%d,%d,%d,%19[^,]",
             new_node->tracking_num,
             new_node->company,
             &new_node->type,
@@ -869,8 +1043,9 @@ void load_from_txt(const char* filename)
             pickup_time_str,
             &new_node->status,
             &new_node->rating,
-            &new_node->reminder_sent);
-        if (parsed != 18) {
+            &new_node->reminder_sent,
+            new_node->promo_code);
+        if (parsed != 20) {
             free(new_node);
             fprintf(stderr, "解析错误: %s", line);
             continue;
@@ -947,6 +1122,11 @@ float calculate_price(ParcelNode* parcel, PriceRule* rule, int zone_choice) {
         + distance_fee
         + rule->package_rate[parcel->type]
         + rule->size_rate[parcel->size];
+    if(parcel->status== WAITING_PICKUP)
+	{
+        price = price + 5;
+		printf("用户选择上门取件，额外收取5元\n");
+	}
     // ---------- 应用账户折扣 ----------
     float discount = rule->account_discount[parcel->sender.accountType];
     if (discount < 0.0f || discount > 1.0f) {
@@ -954,6 +1134,9 @@ float calculate_price(ParcelNode* parcel, PriceRule* rule, int zone_choice) {
         discount = (discount < 0.0f) ? 0.0f : 1.0f;  // 强制在 0~1 之间
     }
     price *= (1.0f - discount);
+    printf("原价格：%.2f\n", price);//新增
+    price = apply_promotions(price, parcel->promo_code);//新增
+    printf("优惠后价格：%.2f\n", price);
     return price;
 }
 
@@ -992,3 +1175,234 @@ PriceRule* find_rule_by_name(const char* name)
     }
     return NULL;  // 未找到规则
 }
+
+// 新增：从文件初始化优惠活动
+void initialize_promotions(const char* filename) {
+    FILE* fp = fopen(filename, "r");
+    if (!fp) {
+        printf("无法打开优惠活动文件，将使用默认配置\n");
+        return;
+    }
+    char line[256];
+    while (fgets(line, sizeof(line), fp)) {
+        Promotion p = { 0 };
+        char start_time_str[20], end_time_str[20];
+        int parsed = sscanf(line, "%19[^,],%d,%f,%f,%f,%f,%19[^,],%19[^,]",
+            p.code,
+            (int*)&p.type,
+            &p.discount_rate,
+            &p.coupon_amount,
+            &p.full_amount,
+            &p.reduction_amount,
+            start_time_str,
+            end_time_str);
+        if (parsed != 8) continue;
+        p.start_time = str_to_time(start_time_str);
+        p.end_time = str_to_time(end_time_str);
+
+        // 插入链表
+        PromotionNode* node = malloc(sizeof(PromotionNode));
+        node->promotion = p;
+        node->next = promotion_list;
+        promotion_list = node;
+    }
+    fclose(fp);
+}
+// 新增：应用优惠活动
+float apply_promotions(float price, const char* promo_code) {
+    time_t now = time(NULL);
+    PromotionNode* current = promotion_list;  // 从链表头部开始遍历
+    while (current != NULL) {
+        Promotion p = current->promotion;
+        // 检查时间范围和优惠码
+        if (now >= p.start_time && now <= p.end_time && (strcmp(promo_code, p.code) == 0 || strcmp(promo_code, "") == 0)) {
+
+            switch (p.type) {
+            case DISCOUNT:
+                price *= p.discount_rate;    // 打折
+                break;
+            case COUPON:
+                price -= p.coupon_amount;   // 代金券
+                break;
+            case FULL_REDUCTION:
+                if (price >= p.full_amount) { // 满减
+                    price -= p.reduction_amount;
+                }
+                else
+                    printf("不满足满减条件\n");
+                break;
+            }
+            if (price < 0) price = 0;
+            break; // 仅应用第一个匹配的优惠
+        }
+        current = current->next;  // 移动到下一个节点
+    }
+    return price;
+}
+// 新增：在程序退出时释放优惠链表内存
+void free_promotion_list() {
+    PromotionNode* current = promotion_list;
+    while (current != NULL) {
+        PromotionNode* temp = current;
+        current = current->next;
+        free(temp);
+    }
+    promotion_list = NULL;  // 清空链表头指针
+}
+// 新增：保存到文件
+void save_promotions_to_file(const char* filename) {
+    FILE* fp = fopen(filename, "w");
+    if (!fp) {
+        printf("保存失败！\n");
+        return;
+    }
+    PromotionNode* curr = promotion_list;
+    while (curr) {
+        Promotion p = curr->promotion;
+        char start[20], end[20];
+        time_to_str(p.start_time, start, 20);
+        time_to_str(p.end_time, end, 20);
+        fprintf(fp, "%s,%d,%.2f,%.2f,%.2f,%.2f,%s,%s\n",
+            p.code, p.type, p.discount_rate,
+            p.coupon_amount, p.full_amount,
+            p.reduction_amount, start, end);
+        curr = curr->next;
+    }
+    fclose(fp);
+}
+// 详细显示单个优惠活动
+void display_promotions_detail(Promotion* p) {
+    char start[30], end[30];
+    time_to_str(p->start_time, start, sizeof(start));
+    time_to_str(p->end_time, end, sizeof(end));
+
+    printf(" 优惠码: %-23s \n", p->code);
+    switch (p->type) {
+    case DISCOUNT:
+        printf(" 类型  : 折扣（%.0f折）%15s \n", p->discount_rate * 100, "");
+        break;
+    case COUPON:
+        printf(" 类型  : 代金券（立减%.2f元）%8s \n", p->coupon_amount, "");
+        break;
+    case FULL_REDUCTION:
+        printf(" 类型  : 满%.2f减%.2f%18s \n",
+            p->full_amount, p->reduction_amount, "");
+    }
+    printf(" 有效期: %s ~ %s \n", start, end);
+}
+// 优惠活动搜索函数
+void search_promotion() {
+    int search_type;
+    printf("\n=== 优惠活动搜索 ===\n");
+    printf("1. 按优惠码查找\n");
+    printf("2. 按类型查找\n");
+    printf("3. 查找有效优惠\n");
+    printf("4. 查找即将过期优惠\n");
+    printf("请选择搜索方式: ");
+    scanf("%d", &search_type);
+    clear_input_buffer();
+
+    time_t now = time(NULL);
+    PromotionNode* curr = promotion_list;
+    int found = 0;
+    char buffer[50];
+
+    switch (search_type) {
+    case 1: { // 按优惠码查找
+        printf("输入优惠码（支持模糊查询）: ");
+        fgets(buffer, sizeof(buffer), stdin);
+        buffer[strcspn(buffer, "\n")] = '\0';
+
+        printf("\n=== 查找结果 ===\n");
+        while (curr) {
+            if (strcasestr(curr->promotion.code, buffer)) {
+                display_promotions_detail(&curr->promotion);
+                found++;
+            }
+            curr = curr->next;
+        }
+        break;
+    }
+
+    case 2: { // 按类型查找
+        printf("选择类型 (0-折扣 1-代金券 2-满减): ");
+        int type;
+        scanf("%d", &type);
+        clear_input_buffer();
+
+        printf("\n=== %s类型优惠 ===\n",
+            type == 0 ? "折扣" :
+            type == 1 ? "代金券" : "满减");
+
+        while (curr) {
+            if (curr->promotion.type == type) {
+                display_promotions_detail(&curr->promotion);
+                found++;
+            }
+            curr = curr->next;
+        }
+        break;
+    }
+
+    case 3: { // 有效优惠
+        printf("\n=== 当前有效优惠 ===\n");
+        while (curr) {
+            if (now >= curr->promotion.start_time &&
+                now <= curr->promotion.end_time) {
+                display_promotions_detail(&curr->promotion);
+                found++;
+            }
+            curr = curr->next;
+        }
+        break;
+    }
+
+    case 4: { // 即将过期（7天内到期）
+        printf("\n=== 即将过期优惠（7天内到期） ===\n");
+        while (curr) {
+            time_t remain = curr->promotion.end_time - now;
+            if (remain > 0 && remain <= 7 * 24 * 3600) {
+                display_promotions_detail(&curr->promotion);
+                found++;
+            }
+            curr = curr->next;
+        }
+        break;
+    }
+
+    default:
+        printf("无效的搜索类型！\n");
+        return;
+    }
+
+    printf("\n共找到 %d 条匹配结果\n", found);
+}
+
+// 判断包裹是否需要标记为滞留状态
+int is_parcel_delayed(ParcelNode* p)
+{
+    // 排除已经处于终态的情况
+    if (p->status == LOST ||
+        p->status == STOLEN ||
+        p->status == REJECTED ||
+        p->status == RETURNED) {
+        return 0;
+    }
+    // 仅针对应检测滞留的状态
+    if (p->status == STORED)
+    {
+        time_t now = time(NULL);
+        time_t store_duration = now - p->store_time;
+        return (store_duration > DELAY_THRESHOLD_SEC) ? 1 : 0;
+    }
+    return 0;
+}
+
+void auto_update_status(ParcelNode* p)
+{
+    if (is_parcel_delayed(p)) {
+        p->status = DELAY; // 动态更新状态
+    }
+}
+
+

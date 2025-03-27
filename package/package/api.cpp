@@ -181,7 +181,7 @@ POIInfo* FindPOI(const POIInfo* head, const char* name)
     return NULL;
 }
 
-void my_position(ParcelNode* node)
+void my_position(ParcelNode* node,int choice)
 {
     // 设置终端输出为 UTF-8
     //SetConsoleOutputCP(CP_UTF8);
@@ -278,10 +278,20 @@ void my_position(ParcelNode* node)
             current->province, current->city, current->district, current->type);
         // 拼接地址信息
         char combined[STR]; 
-        snprintf(combined, sizeof(combined), "%s（%s）", current->name, current->address);
-        strncpy(node->address, combined, sizeof(node->address) - 1);
-        node->address[sizeof(node->address) - 1] = '\0'; // 确保字符串以空字符结尾
-        printf("地址添加成功: %s\n", node->address);
+        if (choice == 0)//选择收件地址
+        {
+			snprintf(combined, sizeof(combined), "%s（%s）", current->name, current->address);
+			strncpy(node->address, combined, sizeof(node->address) - 1);
+			node->address[sizeof(node->address) - 1] = '\0'; // 确保字符串以空字符结尾
+			printf("收件地址添加成功: %s\n", node->address);
+		}
+        else if (choice == 1)//选择寄件地址
+        {
+            snprintf(combined, sizeof(combined), "%s（%s）", current->name, current->address);
+            strncpy(node->send_address, combined, sizeof(node->send_address) - 1);
+            node->send_address[sizeof(node->send_address) - 1] = '\0'; // 确保字符串以空字符结尾
+            printf("寄件地址添加成功: %s\n", node->send_address);
+        }
         FreeLinkedList(&poi_list);// 安全释放并置空
     }
     free(main_data.memory);
