@@ -130,6 +130,7 @@ extern "C" {
     #endif
 
 	void generate_tracking_num(char* num, int size);//生成快递单号
+	int is_valid_tracking(const char* num);//验证快递单号
 	ParcelNode* create_parcel();//创建包裹节点
 	void insert_sorted(ParcelNode** head, ParcelNode* new_node);//按顺序插入链表
 	void delete_parcel(ParcelNode** head, char* tracking_num);//删除包裹
@@ -180,7 +181,7 @@ extern "C" {
     ParcelNode* create_parcel_without_send_address();
     int is_parcel_delayed(ParcelNode* p);//判断是否滞留
 	void auto_update_status(ParcelNode* p);//自动更新状态
-	void restore_normal_status(ParcelNode* p);//恢复正常状态
+	void sanitize_field(char* str);//清理字符串
 
 
     #ifdef __cplusplus

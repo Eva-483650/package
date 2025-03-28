@@ -8,15 +8,43 @@ void clear_input_buffer() {
     while ((c = getchar()) != '\n' && c != EOF);
 }
 
-//生成单号
+// 生成并验证单号
 void generate_tracking_num(char* num, int size)
 {
     time_t t = time(NULL);
     struct tm* tm_info = localtime(&t);
-    snprintf(num, size, "%04d%02d%02d%02d%02d%02d",
-        tm_info->tm_year + 1900, tm_info->tm_mon + 1, tm_info->tm_mday,
-        tm_info->tm_hour, tm_info->tm_min, tm_info->tm_sec);
+    // 生成16位单号：年月日时分秒+2位随机数
+    int random_num = rand() % 100; // 添加随机数保证唯一性
+    snprintf(num, size, "%04d%02d%02d%02d%02d%02d%02d",
+        tm_info->tm_year + 1900,
+        tm_info->tm_mon + 1,
+        tm_info->tm_mday,
+        tm_info->tm_hour,
+        tm_info->tm_min,
+        tm_info->tm_sec,
+        random_num); // 总长度=4+2+2+2+2+2+2=16位
+
+    // 立即验证生成结果
+    if (!is_valid_tracking(num)) 
+    {
+        fprintf(stderr, "致命错误：单号生成失败 %s\n", num);
+        exit(EXIT_FAILURE);
+    }
 }
+
+// 单号验证函数
+int is_valid_tracking(const char* num)
+{
+    // 验证长度是否为16位
+    if (strlen(num) != 16) return 0;
+
+    // 验证是否为纯数字
+    for (int i = 0; i < 16; i++) {
+        if (!isdigit(num[i])) return 0;
+    }
+    return 1;
+}
+
 
 //取件码的生成
 void generate_pickup_code(char* code)
@@ -30,7 +58,6 @@ void generate_pickup_code(char* code)
     }
     code[5] = '\0';  // 字符串终止符
 }
-
 
 //创建包裹节点
 ParcelNode* create_parcel()
@@ -734,7 +761,7 @@ void update_parcel(ParcelNode* node)
         my_position(node,0);
 	}
    
-    // 计算价格
+    //计算价格
     // 查询规则并计算价格
     printf("=== 计算价格 ===\n");
     PriceRule* rule = find_rule_by_name(node->company);
@@ -743,7 +770,20 @@ void update_parcel(ParcelNode* node)
         printf("未找到%s的规则！\n", node->company);
         return;
     }
+    printf("请输入优惠码（若无则直接回车）: ");
+    char promo_code[20];
 
+    // 使用fgets获取完整输入行
+    fgets(promo_code, sizeof(promo_code), stdin);
+    // 去除换行符
+    size_t len = strcspn(promo_code, "\n");
+    promo_code[len] = '\0';
+    // 判断逻辑
+    if (strlen(promo_code) == 0)
+    {
+        strcpy(node->promo_code, "无优惠券");
+    }
+    //（新增）
     float price = calculate_price(node, rule, zone_choice);
     if (price < 0.0f) {
         printf("计算价格失败，请检查输入！\n");
@@ -752,6 +792,7 @@ void update_parcel(ParcelNode* node)
         printf("运费为: %.2f\n", price);
         node->price = price;
     }
+
 
     // 修改收件人信息
     printf("\n是否修改收件人信息? (Y/N): ");
@@ -901,7 +942,6 @@ const char* get_package_status_str(PackageStatus status) {
     }
 }
 
-
 //显示包裹详情
 void display_parcel(ParcelNode* node) {
     if (node == NULL)
@@ -921,6 +961,7 @@ void display_parcel(ParcelNode* node) {
     printf("\n包裹尺寸: %s", get_package_size_str(node->size));
     printf("\n重量: %.2fkg", node->weight);
     printf("\n价格: %.2f", node->price);
+	printf("\n优惠券: %s", node->promo_code);
     printf("\n寄件人: %s", node->sender.name);
     printf("\n收件人: %s", node->receiver.name);
     printf("\n取件人: %s", node->collector.name);
@@ -943,7 +984,6 @@ void display_parcel(ParcelNode* node) {
     printf("\n=================\n");
 }
 
-
 //获取当前时间转换为字符串
 char* get_time()
 {
@@ -955,22 +995,93 @@ char* get_time()
 }
 
 //文件保存
-void save_to_txt(const char* filename)
+//void save_to_txt(const char* filename)
+//{
+//    FILE* fp = fopen(filename, "w");
+//    if (!fp) {
+//        fprintf(stderr, "保存失败: %s\n", strerror(errno));
+//        return;
+//    }
+//    // 写入表头
+//    fprintf(fp, "快递单号, 物流公司, 包裹类型, 包裹尺寸, 重量, 价格, 寄件人, 收件人, 取件人, 取件码, 货架编号, 寄件地址, 收件地址, 寄件时间, 入库时间, 出库时间, 当前状态, 满意度评价, 是否提醒, 优惠券\n");
+//    ParcelNode* current = parcel_list;
+//    while (current) {
+//        char send_time_str[20], store_time_str[20], pickup_time_str[20];
+//        time_to_str(current->send_time, send_time_str, sizeof(send_time_str));
+//        time_to_str(current->store_time, store_time_str, sizeof(store_time_str));
+//        time_to_str(current->pickup_time, pickup_time_str, sizeof(pickup_time_str));
+//        fprintf(fp, "%s,%s,%d,%d,%.2f,%.2f,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%d,%d,%d,%s\n",
+//            current->tracking_num,
+//            current->company,
+//            current->type,
+//            current->size,
+//            current->weight,
+//            current->price,
+//            current->sender.name,
+//            current->receiver.name,
+//            current->collector.name,
+//            current->pickup_code,
+//            current->shelf_id,
+//			current->send_address,
+//            current->address,
+//            send_time_str,
+//            store_time_str,
+//            pickup_time_str,
+//            current->status,
+//            current->rating,
+//            current->reminder_sent,
+//            current->promo_code
+//        );
+//        current = current->next;
+//    }
+//    fclose(fp);
+//}
+
+// 清理字段中的非法字符（关键！）
+void sanitize_field(char* str) 
 {
-    FILE* fp = fopen(filename, "w");
+    char* p = str;
+    while (*p) {
+        // 替换换行符和逗号为下划线
+        if (*p == '\n' || *p == '\r' || *p == ',') 
+        {
+            *p = '_';
+        }
+        p++;
+    }
+}
+
+void save_to_txt(const char* filename) 
+{
+    FILE* fp = fopen(filename, "w"); // 文本模式写入
     if (!fp) {
         fprintf(stderr, "保存失败: %s\n", strerror(errno));
         return;
     }
-    // 写入表头
-    fprintf(fp, "快递单号, 物流公司, 包裹类型, 包裹尺寸, 重量, 价格, 寄件人, 收件人, 取件人, 取件码, 货架编号, 寄件地址, 收件地址, 寄件时间, 入库时间, 出库时间, 当前状态, 满意度评价, 是否提醒, 优惠券\n");
+
+    // 写入表头（无BOM）
+    fprintf(fp, "快递单号,物流公司,类型,尺寸,重量,价格,发件人,收件人,代收人,取件码,货架号,发货地址,收货地址,发货时间,入库时间,取件时间,状态,评分,催件标记,优惠券\r\n");
+
     ParcelNode* current = parcel_list;
     while (current) {
+        // 清理所有字符串字段
+        sanitize_field(current->tracking_num);
+        sanitize_field(current->company);
+        sanitize_field(current->sender.name);
+        sanitize_field(current->receiver.name);
+        sanitize_field(current->collector.name);
+        sanitize_field(current->send_address);
+        sanitize_field(current->address);
+        sanitize_field(current->promo_code);
+
+        // 时间格式化
         char send_time_str[20], store_time_str[20], pickup_time_str[20];
         time_to_str(current->send_time, send_time_str, sizeof(send_time_str));
         time_to_str(current->store_time, store_time_str, sizeof(store_time_str));
         time_to_str(current->pickup_time, pickup_time_str, sizeof(pickup_time_str));
-        fprintf(fp, "%s,%s,%d,%d,%.2f,%.2f,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%d,%d,%d,%s",
+
+        // 写入数据行（严格按格式）
+        fprintf(fp, "%s,%s,%d,%d,%.2f,%.2f,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%d,%d,%d,%s\r\n",
             current->tracking_num,
             current->company,
             current->type,
@@ -982,7 +1093,7 @@ void save_to_txt(const char* filename)
             current->collector.name,
             current->pickup_code,
             current->shelf_id,
-			current->send_address,
+            current->send_address,
             current->address,
             send_time_str,
             store_time_str,
@@ -992,10 +1103,7 @@ void save_to_txt(const char* filename)
             current->reminder_sent,
             current->promo_code
         );
-        if(current->next==NULL)
-		{
-			fprintf(fp, "\n");
-		}
+
         current = current->next;
     }
     fclose(fp);
@@ -1003,28 +1111,88 @@ void save_to_txt(const char* filename)
 
 
 //文件加载
-void load_from_txt(const char* filename) 
-{
-    FILE* fp = fopen(filename, "r");
+//void load_from_txt(const char* filename) 
+//{
+//    FILE* fp = fopen(filename, "r");
+//    if (!fp) {
+//        fprintf(stderr, "加载失败: %s\n", strerror(errno));
+//        return;
+//    }
+//    char line[256];
+//
+//    fgets(line, sizeof(line), fp); // 跳过表头
+//    while (fgets(line, sizeof(line), fp)) 
+//    {
+//        ParcelNode* new_node = (ParcelNode*)malloc(sizeof(ParcelNode));
+//        if (new_node == NULL)
+//        {
+//            fprintf(stderr, "内存分配失败\n");
+//            continue;
+//        }
+//        memset(new_node, 0, sizeof(ParcelNode));
+//        char send_time_str[20], store_time_str[20], pickup_time_str[20];
+//        // 解析每一行数据 赋值给time的时候需要转换
+//        int parsed = sscanf(line, "%19[^,],%49[^,],%d,%d,%f,%f,%49[^,],%49[^,],%49[^,],%5[^,],%9[^,],%4095[^,],%4095[^,],%19[^,],%19[^,],%19[^,],%d,%d,%d,%19[^,]",
+//            new_node->tracking_num,
+//            new_node->company,
+//            &new_node->type,
+//            &new_node->size,
+//            &new_node->weight,
+//            &new_node->price,
+//            new_node->sender.name,
+//            new_node->receiver.name,
+//            new_node->collector.name,
+//            new_node->pickup_code,
+//            new_node->shelf_id,
+//			new_node->send_address,
+//            new_node->address,
+//            send_time_str,
+//            store_time_str,
+//            pickup_time_str,
+//            &new_node->status,
+//            &new_node->rating,
+//            &new_node->reminder_sent,
+//            new_node->promo_code);
+//        if (parsed != 20) {
+//            free(new_node);
+//            fprintf(stderr, "解析错误: %s", line);
+//            continue;
+//        }
+//        new_node->send_time = str_to_time(send_time_str);
+//        new_node->store_time = str_to_time(store_time_str);
+//        new_node->pickup_time = str_to_time(pickup_time_str);
+//        if (new_node->send_time == (time_t)-1 || new_node->store_time == (time_t)-1 || new_node->pickup_time == (time_t)-1) {
+//            free(new_node);
+//            fprintf(stderr, "时间解析错误: %s", line);
+//            continue;
+//        }
+//        insert_sorted(&parcel_list, new_node);  // 保持链表有序
+//    }
+//    fclose(fp);
+//}
+void load_from_txt(const char* filename) {
+    FILE* fp = fopen(filename, "r"); // 文本模式读取
     if (!fp) {
         fprintf(stderr, "加载失败: %s\n", strerror(errno));
         return;
     }
-    char line[256];
 
+    char line[4096];
     fgets(line, sizeof(line), fp); // 跳过表头
-    while (fgets(line, sizeof(line), fp)) 
-    {
-        ParcelNode* new_node = (ParcelNode*)malloc(sizeof(ParcelNode));
-        if (new_node == NULL)
-        {
-            fprintf(stderr, "内存分配失败\n");
-            continue;
-        }
+
+    while (fgets(line, sizeof(line), fp)) {
+        // 清除所有换行符（兼容\n和\r\n）
+        line[strcspn(line, "\r\n")] = '\0';
+
+        ParcelNode* new_node = malloc(sizeof(ParcelNode));
         memset(new_node, 0, sizeof(ParcelNode));
+
+        // 临时存储时间字符串
         char send_time_str[20], store_time_str[20], pickup_time_str[20];
-        // 解析每一行数据 赋值给time的时候需要转换
-        int parsed = sscanf(line, "%19[^,],%49[^,],%d,%d,%f,%f,%49[^,],%49[^,],%49[^,],%5[^,],%9[^,],%4095[^,],%4095[^,],%19[^,],%19[^,],%19[^,],%d,%d,%d,%19[^,]",
+
+        // 严格长度控制（必须与结构体定义一致！）
+        int parsed = sscanf(line,
+            "%19[^,],%49[^,],%d,%d,%f,%f,%49[^,],%49[^,],%49[^,],%5[^,],%9[^,],%4095[^,],%4095[^,],%19[^,],%19[^,],%19[^,],%d,%d,%d,%19[^,]",
             new_node->tracking_num,
             new_node->company,
             &new_node->type,
@@ -1036,7 +1204,7 @@ void load_from_txt(const char* filename)
             new_node->collector.name,
             new_node->pickup_code,
             new_node->shelf_id,
-			new_node->send_address,
+            new_node->send_address,
             new_node->address,
             send_time_str,
             store_time_str,
@@ -1044,24 +1212,25 @@ void load_from_txt(const char* filename)
             &new_node->status,
             &new_node->rating,
             &new_node->reminder_sent,
-            new_node->promo_code);
+            new_node->promo_code
+        );
+
         if (parsed != 20) {
+            fprintf(stderr, "解析失败：需要20列，实际解析到%d列\n错误行：%s\n", parsed, line);
             free(new_node);
-            fprintf(stderr, "解析错误: %s", line);
             continue;
         }
+
+        // 时间转换
         new_node->send_time = str_to_time(send_time_str);
         new_node->store_time = str_to_time(store_time_str);
         new_node->pickup_time = str_to_time(pickup_time_str);
-        if (new_node->send_time == (time_t)-1 || new_node->store_time == (time_t)-1 || new_node->pickup_time == (time_t)-1) {
-            free(new_node);
-            fprintf(stderr, "时间解析错误: %s", line);
-            continue;
-        }
-        insert_sorted(&parcel_list, new_node);  // 保持链表有序
+
+        insert_sorted(&parcel_list, new_node);
     }
     fclose(fp);
 }
+
 
 // 将time_t类型的时间转换为格式化的字符串
 void time_to_str(time_t t, char* buf, size_t size) {
@@ -1093,6 +1262,11 @@ time_t str_to_time(const char* str) {
 
 // 计算包裹费用的函数（带错误检查）
 float calculate_price(ParcelNode* parcel, PriceRule* rule, int zone_choice) {
+    if(find_promotion(parcel->promo_code) == NULL)
+	{
+		printf("未找到优惠活动，自动定义为无优惠\n");
+        strcpy(parcel->promo_code, "无优惠券");
+	}
     // ---------- 参数检查 ----------
     if (!parcel || !rule) {
         printf("错误: 包裹或计费规则指针为空！\n");

@@ -117,6 +117,7 @@ int main() {
                 new_parcel = create_parcel();
             } while (new_parcel == NULL);
             insert_sorted(&parcel_list, new_parcel);
+			display_parcel(new_parcel);
             break;
         case 2:
             delBuffer();
@@ -472,18 +473,25 @@ void returnParcel()
 {
     char num[20];
     printf("输入要退货的单号: ");
-    scanf("%14s", num);
+    if (scanf("%14s", num) != 1) {
+        printf("输入错误，请重试。\n");
+        clear_input_buffer();
+        return;
+    }
     clear_input_buffer();
     ParcelNode* target = searchbytracking_num(parcel_list, num);
-    if (target) {
+    display_parcel(target);
+    if (target==NULL) 
+    {
+        printf("未找到该快递!\n");
+    }
+    else 
+    {
         // 修改状态为已退货
         target->status = RETURNED;
-        printf("退货费用: %.2f\n", target->price+2);
+        printf("退货费用: %.2f\n", target->price + 2);
         printf("退货成功!\n");
         display_parcel(target);
-    }
-    else {
-        printf("未找到该快递!\n");
     }
 }
 
